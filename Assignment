@@ -1,0 +1,183 @@
+pom.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>dashboard</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>Dashboard</name>
+    <description>Dashboard API</description>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.3.1.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+Data.java
+
+@Entity
+public class Data {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private Double intensity;
+    private Double likelihood;
+    private Double relevance;
+    private Integer year;
+    private String country;
+    private String topics;
+    private String region;
+    private String city;
+    private String sector;
+    private String pest;
+    private String source;
+    private String swot;
+
+    // getters and setters
+}
+
+DataRepository.java
+
+public interface DataRepository extends JpaRepository<Data, Long> {
+    List<Data> findByYear(Integer year);
+    List<Data> findByTopics(String topics);
+    List<Data> findBySector(String sector);
+    List<Data> findByPest(String pest);
+    List<Data> findBySource(String source);
+    List<Data> findBySwot(String swot);
+    List<Data> findByRegion(String region);
+    List<Data> findByCity(String city);
+    List<Data> findByCountry(String country);
+}
+
+DataController.java
+
+@RestController
+@RequestMapping("/api")
+public class DataController {
+    @Autowired
+    private DataRepository dataRepository;
+
+    @GetMapping("/data")
+    public List<Data> getData(@RequestParam(required = false) Integer year, @RequestParam(required = false) String topics, 
+                              @RequestParam(required = false) String sector, @RequestParam(required = false) String pest, 
+                              @RequestParam(required = false) String source, @RequestParam(required = false) String swot, 
+                              @RequestParam(required = false) String region, @RequestParam(required = false) String city, 
+                              @RequestParam(required = false) String country) {
+        if (year!= null && topics!= null) {
+            return dataRepository.findByYearAndTopics(year, topics);
+        } else if (year!= null) {
+            return dataRepository.findByYear(year);
+        } else if (topics!= null) {
+            return dataRepository.findByTopics(topics);
+        } else if (sector!= null) {
+            return dataRepository.findBySector(sector);
+        } else if (pest!= null) {
+            return dataRepository.findByPest(pest);
+        } else if (source!= null) {
+            return dataRepository.findBySource(source);
+        } else if (swot!= null) {
+            return dataRepository.findBySwot(swot);
+        } else if (region!= null) {
+            return dataRepository.findByRegion(region);
+        } else if (city!= null) {
+            return dataRepository.findByCity(city);
+        } else if (country!= null) {
+            return dataRepository.findByCountry(country);
+        } else {
+            return dataRepository.findAll();
+        }
+    }
+}
+
+Frontend (React.js)
+// Dashboard.js
+import React, { useState, useEffect } from 'eact';
+import { LineChart, BarChart } from 'eact-chartjs-2';
+import axios from 'axios';
+
+function Dashboard() {
+    const [data, setData] = useState([]);
+    const [year, setYear] = useState(null);
+    const [topics, setTopics] = useState(null);
+
+    useEffect(() => {
+        axios.get(`/api/data?year=${year}&topics=${topics}`)
+           .then(response => setData(response.data));
+    }, [year, topics]);
+
+    const handleYearChange = (event) => {
+        setYear(event.target.value);
+    };
+
+    const handleTopicsChange = (event) => {
+        setTopics(event.target.value);
+    };
+
+    return (
+        <div>
+            <h1>Dashboard</h1>
+            <div>
+                <label>Year:</label>
+                <select value={year} onChange={handleYearChange}>
+                    <option value="">All</option>
+                    <option value="2020">2020</option>
+                    <option value="2021">2021</option>
+                    <!-- Add more options -->
+                </select>
+            </div>
+            <div>
+                <label>Topics:</label>
+                <select value={topics} onChange={handleTopicsChange}>
+                    <option value="">All</option>
+                    <option value="topic1">Topic 1</option>
+                    <option value="topic2">Topic 2</option>
+                    <!-- Add more options -->
+                </select>
+            </div>
+            <LineChart data={data} />
+            <BarChart data={data} />
+            <!-- Add more charts/visualizations -->
+        </div
+
+
+package.json
